@@ -6,18 +6,72 @@
 //
 
 import UIKit
+import CoreMIDI
 
 class YorumlarController : UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     
     var post : Post?
     var comments: [Comment]?
     var fetchedID : String?
+
+    private var collectionViewBottomConstraint: NSLayoutConstraint!
+    private var containerHeightConstraint: NSLayoutConstraint!
+    private var containerBottomConstraint: NSLayoutConstraint!
     
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        guard let id = currentUser?["id"] as? String else { return }
+        fetchedID = id
+        navigationItem.title = "Yorumlar"
+        view.addSubview(YorumlarCollectionView)
+        YorumlarCollectionView.backgroundColor = .white
+        YorumlarCollectionView.delegate = self
+        YorumlarCollectionView.dataSource = self
+        view.addSubview(containerView)
+        containerView.addSubview(txtYorum)
+        
+        collectionViewBottomConstraint = YorumlarCollectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        containerBottomConstraint = containerView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        containerHeightConstraint = containerView.heightAnchor.constraint(equalToConstant: 60)
+        containerView.addSubview(btnYorumGonder)
+        
+        NSLayoutConstraint.activate([
+            YorumlarCollectionView.topAnchor.constraint(equalTo: view.topAnchor),
+            YorumlarCollectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            YorumlarCollectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+        collectionViewBottomConstraint,
+            containerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            containerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+        containerBottomConstraint,
+        containerHeightConstraint,
+            txtYorum.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 8),
+            txtYorum.trailingAnchor.constraint(equalTo: btnYorumGonder.leadingAnchor, constant: -8),
+            txtYorum.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 8),
+            txtYorum.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -8),
+            btnYorumGonder.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -8),
+            btnYorumGonder.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
+            btnYorumGonder.widthAnchor.constraint(equalToConstant: 60)])
+        
+        
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        tapGesture.cancelsTouchesInView = false
+        view.addGestureRecognizer(tapGesture)
+        
+        registerKeyboardNotifications()
+        yorumlariGetir()
+    }
+    
+    @objc fileprivate func dismissKeyboard() {
+        view.endEditing(true)
+    }
     
     lazy var YorumlarCollectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
         cv.backgroundColor = .white
+        cv.translatesAutoresizingMaskIntoConstraints = false
         cv.alwaysBounceVertical = true
         cv.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: -100, right: 0)
         cv.scrollIndicatorInsets = UIEdgeInsets(top: 0, left: 0, bottom: -100, right: 0)
@@ -26,22 +80,6 @@ class YorumlarController : UIViewController, UICollectionViewDelegate, UICollect
       
         return cv
     }()
-    
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        guard let id = currentUser?["id"] as? String else { return }
-        fetchedID = id
-        navigationItem.title = "Yorumlar"
-        view.addSubview(YorumlarCollectionView)
-        YorumlarCollectionView.backgroundColor = .white
-        YorumlarCollectionView.delegate = self
-        YorumlarCollectionView.dataSource = self
-        
-        YorumlarCollectionView.anchor(top: view.topAnchor, bottom: view.bottomAnchor, leading: view.leadingAnchor, trailing: view.trailingAnchor, paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0, width: 0, height: 0)
-        
-        yorumlariGetir()
-    }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return comments?.count ?? 0
@@ -56,20 +94,29 @@ class YorumlarController : UIViewController, UICollectionViewDelegate, UICollect
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         
-        let frame = CGRect(x: 0, y: 0, width: view.frame.height, height: 60)
-        let geciciCell = YorumCell(frame: frame)
-        geciciCell.comment = comments![indexPath.row]
-        geciciCell.layoutIfNeeded()
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "yorumCellID", for: indexPath) as? YorumCell else {
+            return CGSize(width: collectionView.frame.width, height: 50)
+        }
+        cell.comment = comments?[indexPath.item]
+        cell.delegate = self
         
-        let hedefBoyut = CGSize(width: view.frame.width, height: 9999)
-        let tahminiBoyut = geciciCell.systemLayoutSizeFitting(hedefBoyut)
+        cell.contentView.setNeedsLayout()
+        cell.contentView.layoutIfNeeded()
         
-        let yukseklik = max(60, tahminiBoyut.height)
-        return CGSize(width: view.frame.width, height: yukseklik)
+        let targetSize = CGSize(width: collectionView.frame.width, height: UIView.layoutFittingCompressedSize.height)
+        let fittingSize = cell.systemLayoutSizeFitting(targetSize, withHorizontalFittingPriority: .required, verticalFittingPriority: .fittingSizeLevel)
+        
+        return CGSize(width: collectionView.frame.width, height: fittingSize.height)
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
         return 0
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        tabBarController?.tabBar.isHidden = true
+        
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -78,46 +125,57 @@ class YorumlarController : UIViewController, UICollectionViewDelegate, UICollect
         NotificationCenter.default.post(name: GuncelleNotification.GuncelleNotification, object: nil)
     }
     
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        tabBarController?.tabBar.isHidden = true
+    fileprivate func registerKeyboardNotifications() {
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(_:)), name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(_:)), name: UIResponder.keyboardWillHideNotification, object: nil)
     }
     
-    override var canBecomeFirstResponder: Bool {
-        return true
+    @objc fileprivate func keyboardWillShow(_ nofitification: Notification) {
+        if let keyboardFrame = nofitification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect, let duration = nofitification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double {
+                containerBottomConstraint.constant = -keyboardFrame.height
+                collectionViewBottomConstraint.constant = -keyboardFrame.height
+                UIView.animate(withDuration: duration) {
+                    self.view.layoutIfNeeded()
+                }
+            }
+        }
+    @objc fileprivate func keyboardWillHide(_ notification: Notification) {
+        if let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double {
+        containerBottomConstraint.constant = 0
+        collectionViewBottomConstraint.constant = 0
+        UIView.animate(withDuration: duration) {
+            self.view.layoutIfNeeded()
+        }
+    }
     }
     
     lazy var containerView : UIView = {
         let containerView = UIView()
-        containerView.backgroundColor = .white
-        containerView.frame = CGRect(x: 0, y: 0, width: 150, height: 80)
-        
-        let btnYorumGonder = UIButton(type: .system)
-        btnYorumGonder.setTitle("Gonder", for: .normal)
-        btnYorumGonder.setTitleColor(.black, for: .normal)
-        btnYorumGonder.titleLabel?.font = UIFont.boldSystemFont(ofSize: 17)
-        btnYorumGonder.addTarget(self, action: #selector(btnYorumGonderPressed), for: .touchUpInside)
-        
-        containerView.addSubview(btnYorumGonder)
-        btnYorumGonder.anchor(top: containerView.safeAreaLayoutGuide.topAnchor, bottom: containerView.safeAreaLayoutGuide.bottomAnchor, leading: nil, trailing: containerView.safeAreaLayoutGuide.trailingAnchor, paddingTop: 0, paddingBottom: 0, paddingLeft: 15, paddingRight: -15, width: 80, height: 0)
-        
-        containerView.addSubview(txtYorum)
-        
-        txtYorum.anchor(top: containerView.safeAreaLayoutGuide.topAnchor, bottom: containerView.safeAreaLayoutGuide.bottomAnchor, leading: containerView.safeAreaLayoutGuide.leadingAnchor, trailing: btnYorumGonder.leadingAnchor, paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0, width: 0, height: 0)
-        
-        let ayracView = UIView()
-        ayracView.backgroundColor = UIColor.rgbDonustur(red: 230, green: 230, blue: 230)
-        containerView.addSubview(ayracView)
-        ayracView.anchor(top: containerView.topAnchor, bottom: nil, leading: containerView.leadingAnchor, trailing: containerView.trailingAnchor, paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0, width: 0, height: 0.7)
+        containerView.backgroundColor = .systemGray5
+        containerView.translatesAutoresizingMaskIntoConstraints = false
         return containerView
     }()
     
-    let txtYorum : UITextField = {
-        let txt = UITextField()
-        txt.placeholder = "Yorumunuzu Girin..."
-        return txt
+    lazy var txtYorum : UITextView = {
+        let textView = UITextView()
+        textView.font = UIFont.systemFont(ofSize: 17)
+        textView.isScrollEnabled = false
+        textView.backgroundColor = .white
+        textView.layer.cornerRadius = 8
+        textView.translatesAutoresizingMaskIntoConstraints = false
+        textView.delegate = self
+        return textView
     }()
     
+    lazy var btnYorumGonder: UIButton = {
+        let btn = UIButton(type: .system)
+        btn.setTitle("Gonder", for: .normal)
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        btn.titleLabel?.font = UIFont.boldSystemFont(ofSize: 17)
+        btn.addTarget(self, action: #selector(btnYorumGonderPressed), for: .touchUpInside)
+        return btn
+    }()
+
     func yorumlariGetir() {
         yorumlariGetir { (comments: [Comment]) in
             self.comments = comments
@@ -195,8 +253,9 @@ class YorumlarController : UIViewController, UICollectionViewDelegate, UICollect
     }
     
     func yorumGonder(post_id: Int, user_id: Int, comment: String) {
+        let post_user_id = post!.user_id
         let url = URL(string: "http://54.67.91.186/comments.php")!
-        let body = "action=insert&post_id=\(post_id)&user_id=\(user_id)&comment=\(comment)"
+        let body = "action=insert&post_id=\(post_id)&user_id=\(user_id)&comment=\(comment)&post_user_id=\(post_user_id!)"
         var request = URLRequest(url: url)
         request.httpBody = body.data(using: .utf8)
         request.httpMethod = "POST"
@@ -234,18 +293,15 @@ class YorumlarController : UIViewController, UICollectionViewDelegate, UICollect
         
     }
     
-    override var inputAccessoryView: UIView? {
-        get {
-           return containerView
-        }
-    }
+    
 }
 
 extension YorumlarController : YorumCellDelegate {
     func yorumSil(comment: Comment) {
-        
+        guard let user_id = Int(fetchedID!) else {return}
+            let post_user_id = post!.user_id
             let url = URL(string: "http://54.67.91.186/comments.php")!
-            let body = "action=delete&post_id=\(post!.id!)&id=\(comment.id!)"
+            let body = "action=delete&post_id=\(post!.id!)&id=\(comment.id!)&user_id=\(user_id)&post_user_id=\(post_user_id!)"
             var request = URLRequest(url: url)
             request.httpBody = body.data(using: .utf8)
             request.httpMethod = "POST"
@@ -281,5 +337,21 @@ extension YorumlarController : YorumCellDelegate {
             }
                 
             }.resume()
+    }
+}
+
+extension YorumlarController: UITextViewDelegate {
+    func textViewDidChange(_ textView: UITextView) {
+      
+        let maxHeight: CGFloat = 150
+        let size = textView.sizeThatFits(CGSize(width: textView.frame.width, height: .greatestFiniteMagnitude))
+        let newHeight = min(max(size.height + 16, 60), maxHeight)
+        
+        if newHeight != containerHeightConstraint.constant {
+            containerHeightConstraint.constant = newHeight
+            UIView.animate(withDuration: 0.2) {
+                self.view.layoutIfNeeded()
+            }
+        }
     }
 }

@@ -67,11 +67,16 @@ class YorumCell: UICollectionViewCell {
         backgroundColor = .white
         addSubview(imgKullaniciProfil)
         
-        imgKullaniciProfil.anchor(top: topAnchor, bottom: nil, leading: leadingAnchor, trailing: nil, paddingTop: 10, paddingBottom: 0, paddingLeft: 10, paddingRight: 0, width: 50, height: 50)
+        imgKullaniciProfil.anchor(top: topAnchor, bottom: bottomAnchor, leading: leadingAnchor, trailing: nil, paddingTop: 10, paddingBottom: 0, paddingLeft: 10, paddingRight: 0, width: 50, height: 50)
         addSubview(yorumSil)
         yorumSil.anchor(top: topAnchor, bottom: bottomAnchor, leading: nil, trailing: trailingAnchor, paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0, width: 0, height: 0)
         addSubview(lblYorum)
         lblYorum.anchor(top: topAnchor, bottom: bottomAnchor, leading: imgKullaniciProfil.trailingAnchor, trailing: yorumSil.leadingAnchor, paddingTop: 5, paddingBottom: -5, paddingLeft: 10, paddingRight: -5, width: 0, height: 0)
+        
+        let ayracView = UIView()
+        ayracView.backgroundColor = UIColor(white: 0, alpha: 0.45)
+        addSubview(ayracView)
+        ayracView.anchor(top: nil, bottom: bottomAnchor, leading: lblYorum.leadingAnchor, trailing: trailingAnchor, paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0, width: 0, height: 0.45)
     }
     
     required init?(coder: NSCoder) {

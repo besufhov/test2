@@ -61,11 +61,10 @@ class KullaniciAraController : UIViewController, UICollectionViewDelegate, UICol
         fetchUser(limit: limit, offset: skip, name: "") { (users: [User]) in
             self.users = users
             self.KullaniciCollectionView.reloadData()
-            
         }
-       
-        
     }
+    
+   
     
     override func viewWillAppear(_ animated: Bool) {
         searchBar.isHidden = false

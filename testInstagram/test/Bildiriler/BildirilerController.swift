@@ -87,7 +87,7 @@ class BildiriController : UIViewController, UICollectionViewDelegate, UICollecti
         let offset: Int = 0
         
         let url = URL(string: "http://54.67.91.186/notifications.php")!
-        let body = "action=select&user_id=\(Int(fetchedID!))&offset=\(offset)&limit=\(limit)"
+        let body = "action=select&user_id=\(fetchedID!)&offset=\(offset)&limit=\(limit)"
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.httpBody = body.data(using: .utf8)

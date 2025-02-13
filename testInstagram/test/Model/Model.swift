@@ -54,8 +54,8 @@ class Comment: NSObject {
 class Post: NSObject {
     
     var id: Int?
-    var userid: Int?
-    var likes: Int?
+    var user_id: Int?
+    var is_liked_by_me: Int?
     var picture: String?
     var type: String?
     var postmessage: String?
@@ -66,6 +66,17 @@ class Post: NSObject {
     var liked: Int?
     var likescount: Int?
     var commentscount: Int?
+}
+
+class ResizableInputAccessoryView: UIView {
+    var targetHeight : CGFloat = 50 {
+        didSet {
+            self.frame.size.height = targetHeight
+            self.setNeedsLayout()
+            self.layoutIfNeeded()
+        }
+    }
+    
 }
 
 struct Kullanici {

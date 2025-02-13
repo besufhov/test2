@@ -198,8 +198,8 @@ class AnaController : UIViewController, UICollectionViewDelegate, UICollectionVi
                         
                         let post = Post()
                         post.id = dictionary["id"] as? Int
-                        post.userid = dictionary["user_id"] as? Int
-                        post.likes = dictionary["likes"] as? Int
+                        post.user_id = dictionary["user_id"] as? Int
+                        post.is_liked_by_me = dictionary["is_liked_by_me"] as? Int
                         post.type = dictionary["type"] as? String
                         post.picture = dictionary["picture"] as? String
                         post.postmessage = dictionary["postmessage"] as? String
@@ -245,9 +245,9 @@ extension AnaController : AnaPaylasimCellDelegate {
         guard let user_id = Int(fetchedID!) else {return}
         guard let indexPath = AnaCollectionView.indexPath(for: cell) else {return}
         let post = self.posts![indexPath.item]
-        let post_user_id = post.userid
+        let post_user_id = post.user_id
         
-        if post.liked != nil {
+        if post.is_liked_by_me == 1 {
             let url = URL(string: "http://54.67.91.186/likes.php")!
             let body = "action=delete&post_id=\(post.id!)&user_id=\(user_id)&post_user_id=\(post_user_id!)"
             var request = URLRequest(url: url)
@@ -273,7 +273,7 @@ extension AnaController : AnaPaylasimCellDelegate {
                     
                     if parsedJSON["status"] as? String == "200"{
                         print("Success")
-                        post.liked = nil
+                        post.is_liked_by_me = 0
                         post.likescount = post.likescount! - 1
                         self.AnaCollectionView.reloadItems(at: [indexPath])
                     } else { print("Error") }
@@ -286,7 +286,7 @@ extension AnaController : AnaPaylasimCellDelegate {
             }
                 
             }.resume()
-        } else {
+        } else if post.is_liked_by_me == 0 {
             let url = URL(string: "http://54.67.91.186/likes.php")!
             let body = "action=insert&post_id=\(post.id!)&user_id=\(user_id)&post_user_id=\(post_user_id!)"
             var request = URLRequest(url: url)
@@ -312,7 +312,7 @@ extension AnaController : AnaPaylasimCellDelegate {
                     
                     if parsedJSON["status"] as? String == "200"{
                         print("Success")
-                        post.liked = self.userid
+                        post.is_liked_by_me = 1
                         post.likescount = post.likescount! + 1
                         self.AnaCollectionView.reloadItems(at: [indexPath])
                     } else { print("Error") }

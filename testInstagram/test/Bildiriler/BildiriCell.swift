@@ -20,6 +20,9 @@ class BildiriCell: UICollectionViewCell {
                 } else if type == "like" {
                     attrText.append(NSAttributedString(string: " gonderini begendi" , attributes: [.font : UIFont.systemFont(ofSize: 16)]))
                     lblYorum.attributedText = attrText
+                } else if type == "comment" {
+                    attrText.append(NSAttributedString(string: " gonderine yorum yapti" , attributes: [.font : UIFont.systemFont(ofSize: 16)]))
+                    lblYorum.attributedText = attrText
                 }
             }
             

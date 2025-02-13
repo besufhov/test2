@@ -27,10 +27,10 @@ class AnaPaylasimCell : UICollectionViewCell {
         didSet {
             
             verileriAl()
-            if post?.liked != nil {
+            if post?.is_liked_by_me == 1 {
                 let img = UIImage(named: "like_selected")
                 btnBegen.setImage(img, for: .normal)
-            } else {
+            } else if post?.is_liked_by_me == 0 {
                 let img = UIImage(named: "like_unselected")
                 btnBegen.setImage(img, for: .normal)
             }

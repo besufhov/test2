@@ -460,8 +460,8 @@ class KullaniciProfilController : UIViewController, UICollectionViewDelegate, UI
                     
                     let post = Post()
                     post.id = dictionary["id"] as? Int
-                    post.userid = dictionary["user_id"] as? Int
-                    post.likes = dictionary["likes"] as? Int
+                    post.user_id = dictionary["user_id"] as? Int
+                   // post.likes = dictionary["likes"] as? Int
                     post.type = dictionary["type"] as? String
                     post.picture = dictionary["picture"] as? String
                     post.postmessage = dictionary["postmessage"] as? String
